@@ -4,7 +4,9 @@ import dns.resolver
 from aiosmtpd.controller import Controller
 
 # Настройка логирования
-logging.basicConfig(level=logging.INFO, filename="email_gateway.log", filemode="a",
+logging.basicConfig(level=logging.INFO,
+                    filename="email_gateway.log",
+                    filemode="a",
                     format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("SecureEmailGateway")
 
@@ -40,7 +42,8 @@ async def handle_DATA(envelope):
     # Проверка SPF
     spf_result = check_spf(mail_from)
     if not spf_result["valid"]:
-        logger.warning(f"SPF провалился для {mail_from}: {spf_result['reason']}")
+        logger.warning(
+            f"SPF провалился для {mail_from}: {spf_result['reason']}")
         return "550 SPF check failed"
 
     # Проверка на спам
@@ -50,7 +53,8 @@ async def handle_DATA(envelope):
 
     # Проверка вложений (имитация антивирусной проверки)
     if has_malicious_attachment(content):
-        logger.warning(f"Обнаружено вредоносное вложение в письме от {mail_from}")
+        logger.warning(
+            f"Обнаружено вредоносное вложение в письме от {mail_from}")
         return "550 Malicious attachment detected"
 
     logger.info("Письмо прошло все проверки.")
@@ -66,7 +70,8 @@ if __name__ == "__main__":
     controller = Controller(handler, hostname='127.0.0.1', port=1025)
     controller.start()
 
-    logger.info("Secure Email Gateway запущен. Нажмите Ctrl+C для завершения.")
+    logger.info(
+        "Secure Email Gateway запущен. Нажмите Ctrl+C для завершения.")
     try:
         asyncio.get_event_loop().run_forever()
     except KeyboardInterrupt:

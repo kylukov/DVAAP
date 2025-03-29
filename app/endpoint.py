@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from pydantic import BaseModel
 import json
 from pathlib import Path
@@ -8,19 +9,20 @@ import uuid
 from datetime import datetime
 import os
 
-app = FastAPI(title="VPN Connection Requests")
+app = FastAPI()
 
-# Пути к файлам
+# Enable HTTPS redirect in production
+if os.getenv("APP_ENV") == "production":
+    app.add_middleware(HTTPSRedirectMiddleware)
+
+# Setup paths
 BASE_DIR = Path(__file__).parent
+DATA_FILE = BASE_DIR / "data" / "vpn_requests.json"
 TEMPLATES_DIR = BASE_DIR / "templates"
-DATA_DIR = BASE_DIR / "data"
-DATA_FILE = DATA_DIR / "vpn_requests.json"
 
-# Создаем директории, если их нет
-os.makedirs(TEMPLATES_DIR, exist_ok=True)
-os.makedirs(DATA_DIR, exist_ok=True)
+# Ensure directories exist
+DATA_FILE.parent.mkdir(exist_ok=True)
 DATA_FILE.touch(exist_ok=True)
-
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 
@@ -88,7 +90,17 @@ async def list_requests():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-    ### python -m uvicorn app.main:app --reload
+    if os.getenv("APP_ENV") == "production":
+        uvicorn.run(
+            "app.endpoint:app",
+            host="0.0.0.0",
+            port=443,
+            ssl_keyfile="/etc/letsencrypt/live/your-domain.com/privkey.pem",
+            ssl_certfile="/etc/letsencrypt/live/your-domain.com/fullchain.pem"
+        )
+    else:
+        uvicorn.run(
+            "app.endpoint:app",
+            host="0.0.0.0",
+            port=8000
+        )

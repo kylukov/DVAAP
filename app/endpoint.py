@@ -95,8 +95,8 @@ if __name__ == "__main__":
             "app.endpoint:app",
             host="0.0.0.0",
             port=443,
-            ssl_keyfile="/etc/letsencrypt/live/your-domain.com/privkey.pem",
-            ssl_certfile="/etc/letsencrypt/live/your-domain.com/fullchain.pem"
+            ssl_keyfile="/etc/letsencrypt/live/netpulse.space/privkey.pem",
+            ssl_certfile="/etc/letsencrypt/live/netpulse.space/fullchain.pem"
         )
     else:
         uvicorn.run(

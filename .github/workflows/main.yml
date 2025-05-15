@@ -1,0 +1,36 @@
+name: Docker Build and Test
+
+on:
+  push:
+    branches: [ "main" ]  # Запускать при пуше в main
+  pull_request:
+    branches: [ "main" ]  # Запускать при PR в main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub (если нужно)
+        if: false  # Отключено, но можно включить для приватных образов
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t dvaap .
+
+      - name: Run Docker container and test
+        run: |
+          docker run -d --name dvaap-test -p 8080:8080 dvaap
+          sleep 5  # Даем контейнеру время запуститься
+          docker ps | grep dvaap-test || (echo "Container failed to start!" && exit 1)
+          docker logs dvaap-test  # Выводим логи для отладки
+          docker stop dvaap-test && docker rm dvaap-test  # Очистка
